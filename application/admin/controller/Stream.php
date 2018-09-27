@@ -202,7 +202,7 @@ class Stream extends BasisController {
     }
 
     /* 禁播流 */
-    public function forbidden() {
+    public function disable() {
 
         /* 接收参数 */
         $id = request()->param('id');
@@ -223,7 +223,60 @@ class Stream extends BasisController {
         }
 
         /* 查询结果 */
+        $anchor = $this->anchor_model->where('id',$id)->find();
+        if ($anchor) {
+            $streamKey = "anchor".$id;
+            $this->hub->stream($streamKey)->disable();
+            return json([
+                'code'      => '200',
+                'message'   => '禁流成功'
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '该主播不存在'
+            ]);
+        }
 
+    }
+
+    /* 启用流 */
+    public function enable() {
+
+        /* 接收参数 */
+        $id = request()->param('id');
+
+        /* 验证参数 */
+        $validate_data = [
+            'id'        => $id
+        ];
+
+        /* 验证结果 */
+        $result = $this->stream_validate->scene('enable')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->stream_validate->getError()
+            ]);
+        }
+
+        /* 返回结果 */
+        $anchor = $this->anchor_model->where('id', $id)->find();
+
+        if ($anchor) {
+            $streamKey = "anchor".$id;
+            $this->hub->stream($streamKey)->enable();
+            return json([
+                'code'      => '200',
+                'message'   => '启用流成功'
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '该主播不存在'
+            ]);
+        }
     }
 
     /* 直播实时信息 */

@@ -27,7 +27,8 @@
         "pili-engineering/pili-sdk-php.v2": "dev-master",
         "pingplusplus/pingpp-php": "2.4.*",
         "gmars/tp5-nestedsets": "dev-master",
-        "gmars/tp5-rbac": "dev-master"
+        "gmars/tp5-rbac": "dev-master",
+        "endroid/qr-code": "2.5.1"
     },
     "autoload": {
         "psr-4": {

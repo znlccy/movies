@@ -32,6 +32,7 @@ class Order extends BasisController {
         $this->order_page = config('pagination');
     }
 
+    /* 订单列表 */
     public function entry() {
 
         /* 接收参数 */
@@ -39,6 +40,7 @@ class Order extends BasisController {
 
     }
 
+    /* 订单添加更新 */
     public function save() {
 
     }
@@ -89,7 +91,32 @@ class Order extends BasisController {
 
         /* 验证参数 */
         $validate_data = [
-            
+            'id'        => $id
         ];
+
+        /* 验证结果 */
+        $result = $this->order_validate->scene('delete')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->order_validate->getError()
+            ]);
+        }
+
+        /* 返回结果 */
+        $delete = $this->order_model->where('id', $id)->delete();
+
+        if ($delete) {
+            return json([
+                'code'      => '200',
+                'message'   => '删除订单成功'
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '删除数据失败'
+            ]);
+        }
     }
 }
