@@ -237,10 +237,16 @@ return [
         'list_rows' => 15,
     ],
 
-    //
+    //流配置
     'stream'        => [
         'ak'        => 'qs8DkdQ12I44VrC-GOEJNFAVSZUT12Q5ksS9qlNd',
         'sk'        => 'QkGIg99LvdMKYqwoRWSB0lc3AzD6beGOJTjjCkaV',
         'hubName'   => 'tupiaopiao'
-    ]
+    ],
+
+    //支付配置
+    'pay'           => [
+        'apiKey'    => 'sk_test_nbLa9SD84qfHezj1qD1WfPeT',
+        'appId'     => 'app_jj9irPO80arTrDOm'
+    ],
 ];

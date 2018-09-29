@@ -2,55 +2,55 @@
 /**
  * Created by PhpStorm.
  * User: Administrator
- * Date: 2018/9/26
- * Time: 11:14
- * Comment: 主播控制器
+ * Date: 2018/9/28
+ * Time: 12:10
+ * Comment: 货币类型控制器
  */
 
 namespace app\admin\controller;
 
 use think\Request;
-use app\admin\model\Anchor as AnchorModel;
-use app\admin\validate\Anchor as AnchorValidate;
+use app\admin\model\Currency as CurrencyModel;
+use app\admin\validate\Currency as CurrencyValidate;
 
-class Anchor extends BasisController {
+class Currency extends BasisController {
 
-    /* 主播模型 */
-    protected $anchor_model;
+    /* 声明货币模型 */
+    protected $currency_model;
 
-    /* 主播验证器 */
-    protected $anchor_validate;
+    /* 声明货币验证器 */
+    protected $currency_validate;
 
-    /* 主播分页器 */
-    protected $anchor_page;
+    /* 声明货币分页器 */
+    protected $currency_page;
 
-    /* 默认构造函数 */
+    /* 声明默认构造函数 */
     public function __construct(Request $request = null) {
         parent::__construct($request);
-        $this->anchor_model = new AnchorModel();
-        $this->anchor_validate = new AnchorValidate();
-        $this->anchor_page = config('pagination');
+        $this->currency_model = new CurrencyModel();
+        $this->currency_validate = new CurrencyValidate();
+        $this->currency_page = config('pagination');
     }
 
-    /* 主播列表 */
+    /* 货币列表 */
     public function entry() {
 
         /* 接收参数 */
         $id = request()->param('id');
         $name = request()->param('name');
-        $live_room = request()->param('live_room');
+        $status = request()->param('status');
         $create_start = request()->param('create_start');
         $create_end = request()->param('create_end');
         $update_start = request()->param('update_start');
         $update_end = request()->param('update_end');
-        $page_size = request()->param('page_size');
-        $jump_page = request()->param('jump_page');
+        $page_size = request()->param('page_size',$this->currency_page['PAGE_SIZE']);
+        $jump_page = request()->param('jump_page',$this->currency_page['JUMP_PAGE']);
 
-        /* 验证结果 */
+        /* 验证参数 */
         $validate_data = [
             'id'            => $id,
             'name'          => $name,
-            'live_room'     => $live_room,
+            'status'        => $status,
             'create_start'  => $create_start,
             'create_end'    => $create_end,
             'update_start'  => $update_start,
@@ -60,12 +60,12 @@ class Anchor extends BasisController {
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('entry')->check($validate_data);
+        $result = $this->currency_validate->scene('entry')->check($validate_data);
 
         if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->currency_validate->getError()
             ]);
         }
 
@@ -77,11 +77,22 @@ class Anchor extends BasisController {
         }
 
         if ($name) {
-            $conditions['name'] = ['like', '%' . $name . '%'];
+            $conditions['name'] = ['like', '%'. $name .'%'];
         }
 
-        if ($live_room) {
-            $conditions['live_room'] = ['like', '%' . $live_room . '%'];
+        if (is_null($status)) {
+            $conditions['status'] = ['in',[0,1]];
+        } else {
+            switch ($status) {
+                case 0:
+                    $conditions['status'] = $status;
+                    break;
+                case 1:
+                    $conditions['status'] = $status;
+                    break;
+                default:
+                    break;
+            }
         }
 
         if ($create_start && $create_end) {
@@ -93,16 +104,16 @@ class Anchor extends BasisController {
         }
 
         /* 返回结果 */
-        $anchor = $this->anchor_model
+        $currency = $this->currency_model
             ->where($conditions)
             ->order('id', 'desc')
             ->paginate($page_size, false, ['page' => $jump_page]);
 
-        if ($anchor) {
+        if ($currency) {
             return json([
                 'code'      => '200',
                 'message'   => '查询数据成功',
-                'data'      => $anchor
+                'data'      => $currency
             ]);
         } else {
             return json([
@@ -112,47 +123,36 @@ class Anchor extends BasisController {
         }
     }
 
-    /* 主播添加更新 */
+    /* 货币添加更新 */
     public function save() {
 
         /* 接收参数 */
         $id = request()->param('id');
         $name = request()->param('name');
-        $live_room = request()->param('live_room');
-        $avatar = request()->file('avatar');
-        if ($avatar) {
-            $info = $avatar->move(ROOT_PATH . 'public' . DS . 'images');
-            if ($info) {
-                //成功上传后，获取上传信息
-                //输出文件保存路径
-                $sub_path = str_replace('\\', '/', $info->getSaveName());
-                $avatar  = '/images/' . $sub_path;
-            }
-        }
+        $status = request()->param('status',1);
 
         /* 验证参数 */
         $validate_data = [
             'id'        => $id,
             'name'      => $name,
-            'live_room' => $live_room,
-            'avatar'    => $avatar
+            'status'    => $status
         ];
 
-        /* 验证结果 */
-        $result = $this->anchor_validate->scene('save')->check($validate_data);
+        /* 返回结果 */
+        $result = $this->currency_validate->scene('save')->check($validate_data);
 
         if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->currency_validate->getError()
             ]);
         }
 
         /* 返回结果 */
         if (empty($id) || is_null($id)) {
-            $operator = $this->anchor_model->save($validate_data);
+            $operator = $this->currency_model->save($validate_data);
         } else {
-            $operator = $this->anchor_model->save($validate_data,['id' => $id]);
+            $operator = $this->currency_model->save($validate_data, ['id' => $id]);
         }
 
         if ($operator) {
@@ -168,7 +168,7 @@ class Anchor extends BasisController {
         }
     }
 
-    /* 主播详情 */
+    /* 货币详情 */
     public function detail() {
 
         /* 接收参数 */
@@ -180,66 +180,67 @@ class Anchor extends BasisController {
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('detail')->check($validate_data);
+        $result = $this->currency_validate->scene('detail')->check($validate_data);
 
-        if ($result) {
+        if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->currency_validate->getError()
             ]);
         }
 
         /* 返回结果 */
-        $detail = $this->anchor_model->where('id',$id)->find();
+        $currency = $this->currency_model->where('id', $id)->find();
 
-        if ($detail) {
+        if ($currency) {
             return json([
                 'code'      => '200',
-                'message'   => '查询主播成功',
-                'data'      => $detail
+                'message'   => '查询货币成功',
+                'data'      => $currency
             ]);
         } else {
             return json([
                 'code'      => '404',
-                'message'   => '查询主播失败'
+                'message'   => '查询货币失败'
             ]);
         }
     }
 
-    /* 删除主播 */
+    /* 货币删除 */
     public function delete() {
 
         /* 接收参数 */
         $id = request()->param('id');
 
-        /* 验证数据 */
+        /* 验证参数 */
         $validate_data = [
             'id'        => $id
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('delete')->check($validate_data);
+        $result = $this->currency_validate->scene('delete')->check($validate_data);
 
-        if ($result) {
+        if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->currency_validate->getError()
             ]);
         }
 
-        /* 返回数据 */
-        $delete = $this->anchor_model->where('id',$id)->delete();
+        /* 返回结果 */
+        $delete = $this->currency_model->where('id', $id)->delete();
 
         if ($delete) {
             return json([
                 'code'      => '200',
-                'message'   => '删除成功'
+                'message'   => '删除信息成功'
             ]);
         } else {
             return json([
                 'code'      => '404',
-                'message'   => '删除失败'
+                'message'   => '删除信息失败'
             ]);
         }
     }
+
 }

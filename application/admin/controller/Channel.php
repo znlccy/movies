@@ -2,43 +2,43 @@
 /**
  * Created by PhpStorm.
  * User: Administrator
- * Date: 2018/9/26
- * Time: 11:14
- * Comment: 主播控制器
+ * Date: 2018/9/28
+ * Time: 12:10
+ * Comment: 渠道控制器
  */
 
 namespace app\admin\controller;
 
+use app\admin\model\Channel as ChannelModel;
+use app\admin\validate\Channel as ChannelValidate;
 use think\Request;
-use app\admin\model\Anchor as AnchorModel;
-use app\admin\validate\Anchor as AnchorValidate;
 
-class Anchor extends BasisController {
+class Channel extends BasisController {
 
-    /* 主播模型 */
-    protected $anchor_model;
+    /* 渠道模型 */
+    protected $channel_model;
 
-    /* 主播验证器 */
-    protected $anchor_validate;
+    /* 渠道验证器 */
+    protected $channel_validate;
 
-    /* 主播分页器 */
-    protected $anchor_page;
+    /* 渠道分页 */
+    protected $channel_page;
 
     /* 默认构造函数 */
     public function __construct(Request $request = null) {
         parent::__construct($request);
-        $this->anchor_model = new AnchorModel();
-        $this->anchor_validate = new AnchorValidate();
-        $this->anchor_page = config('pagination');
+        $this->channel_model = new ChannelModel();
+        $this->channel_validate = new ChannelValidate();
+        $this->channel_page = config('pagination');
     }
 
-    /* 主播列表 */
+    /* 渠道列表 */
     public function entry() {
 
         /* 接收参数 */
         $id = request()->param('id');
         $name = request()->param('name');
-        $live_room = request()->param('live_room');
+        $status = request()->param('status');
         $create_start = request()->param('create_start');
         $create_end = request()->param('create_end');
         $update_start = request()->param('update_start');
@@ -46,11 +46,11 @@ class Anchor extends BasisController {
         $page_size = request()->param('page_size');
         $jump_page = request()->param('jump_page');
 
-        /* 验证结果 */
+        /* 验证参数 */
         $validate_data = [
             'id'            => $id,
             'name'          => $name,
-            'live_room'     => $live_room,
+            'status'        => $status,
             'create_start'  => $create_start,
             'create_end'    => $create_end,
             'update_start'  => $update_start,
@@ -60,12 +60,12 @@ class Anchor extends BasisController {
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('entry')->check($validate_data);
+        $result = $this->channel_validate->scene('entry')->check($validate_data);
 
         if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->channel_validate->getError()
             ]);
         }
 
@@ -80,8 +80,19 @@ class Anchor extends BasisController {
             $conditions['name'] = ['like', '%' . $name . '%'];
         }
 
-        if ($live_room) {
-            $conditions['live_room'] = ['like', '%' . $live_room . '%'];
+        if (is_null($status)) {
+            $conditions['status'] = ['in',[0,1]];
+        } else {
+            switch ($status) {
+                case 0:
+                    $conditions['status'] = $status;
+                    break;
+                case 1:
+                    $conditions['status'] = $status;
+                    break;
+                default:
+                    break;
+            }
         }
 
         if ($create_start && $create_end) {
@@ -93,66 +104,55 @@ class Anchor extends BasisController {
         }
 
         /* 返回结果 */
-        $anchor = $this->anchor_model
+        $channel = $this->channel_model
             ->where($conditions)
-            ->order('id', 'desc')
+            ->order('id','desc')
             ->paginate($page_size, false, ['page' => $jump_page]);
 
-        if ($anchor) {
+        if ($channel) {
             return json([
                 'code'      => '200',
-                'message'   => '查询数据成功',
-                'data'      => $anchor
+                'message'   => '查询信息成功',
+                'data'      => $channel
             ]);
         } else {
             return json([
                 'code'      => '404',
-                'message'   => '查询数据失败'
+                'message'   => '查询信息失败'
             ]);
         }
     }
 
-    /* 主播添加更新 */
+    /* 渠道添加更新 */
     public function save() {
 
         /* 接收参数 */
         $id = request()->param('id');
         $name = request()->param('name');
-        $live_room = request()->param('live_room');
-        $avatar = request()->file('avatar');
-        if ($avatar) {
-            $info = $avatar->move(ROOT_PATH . 'public' . DS . 'images');
-            if ($info) {
-                //成功上传后，获取上传信息
-                //输出文件保存路径
-                $sub_path = str_replace('\\', '/', $info->getSaveName());
-                $avatar  = '/images/' . $sub_path;
-            }
-        }
+        $status = request()->param('status');
 
         /* 验证参数 */
         $validate_data = [
             'id'        => $id,
             'name'      => $name,
-            'live_room' => $live_room,
-            'avatar'    => $avatar
+            'status'    => $status
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('save')->check($validate_data);
+        $result = $this->channel_validate->scene('save')->check($validate_data);
 
         if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->channel_validate->getError()
             ]);
         }
 
         /* 返回结果 */
         if (empty($id) || is_null($id)) {
-            $operator = $this->anchor_model->save($validate_data);
+            $operator = $this->channel_model->save($validate_data);
         } else {
-            $operator = $this->anchor_model->save($validate_data,['id' => $id]);
+            $operator = $this->channel_model->save($validate_data, ['id' => $id]);
         }
 
         if ($operator) {
@@ -168,7 +168,7 @@ class Anchor extends BasisController {
         }
     }
 
-    /* 主播详情 */
+    /* 渠道详情 */
     public function detail() {
 
         /* 接收参数 */
@@ -180,65 +180,66 @@ class Anchor extends BasisController {
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('detail')->check($validate_data);
+        $result = $this->channel_validate->scene('detail')->check($validate_data);
 
-        if ($result) {
+        if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->channel_validate->getError()
             ]);
         }
 
         /* 返回结果 */
-        $detail = $this->anchor_model->where('id',$id)->find();
+        $detail = $this->channel_model->where('id', $id)->find();
 
         if ($detail) {
             return json([
                 'code'      => '200',
-                'message'   => '查询主播成功',
+                'message'   => '查询消息成功',
                 'data'      => $detail
             ]);
         } else {
             return json([
                 'code'      => '404',
-                'message'   => '查询主播失败'
+                'message'   => '查询消息失败'
             ]);
         }
+
     }
 
-    /* 删除主播 */
+    /* 渠道删除 */
     public function delete() {
 
         /* 接收参数 */
         $id = request()->param('id');
 
-        /* 验证数据 */
+        /* 验证参数 */
         $validate_data = [
             'id'        => $id
         ];
 
         /* 验证结果 */
-        $result = $this->anchor_validate->scene('delete')->check($validate_data);
+        $result = $this->channel_validate->scene('delete')->check($validate_data);
 
-        if ($result) {
+        if (true !== $result) {
             return json([
                 'code'      => '401',
-                'message'   => $this->anchor_validate->getError()
+                'message'   => $this->channel_validate->getError()
             ]);
         }
 
-        /* 返回数据 */
-        $delete = $this->anchor_model->where('id',$id)->delete();
+        /* 返回结果 */
+        $delete = $this->channel_model->where('id', $id)->delete();
 
         if ($delete) {
             return json([
                 'code'      => '200',
-                'message'   => '删除成功'
+                'message'   => '删除消息成功'
             ]);
         } else {
             return json([
                 'code'      => '404',
-                'message'   => '删除失败'
+                'message'   => '删除消息失败'
             ]);
         }
     }

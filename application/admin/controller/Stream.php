@@ -281,7 +281,7 @@ class Stream extends BasisController {
 
     /* 直播实时信息 */
     public function live() {
-
+        
     }
 
     /* 批量查询直播实时信息 */

@@ -32,18 +32,56 @@ class Admin extends BasisController {
         $this->admin_page = config('pagination');
     }
 
+    /* 管理员列表 */
     public function entry() {
 
     }
 
+    /* 管理员添加更新 */
     public function save() {
 
     }
 
+    /* 管理员详情 */
     public function detail() {
+
+        /* 接收参数 */
+        $id = request()->param('id');
+
+        /* 验证参数 */
+        $validate_data = [
+            'id'        => $id
+        ];
+
+        /* 验证结果 */
+        $result = $this->admin_validate->scene('detail')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->admin_validate->getError()
+            ]);
+        }
+
+        /* 返回结果 */
+        $admin = $this->admin_model->where('id', $id)->find();
+
+        if ($admin) {
+            return json([
+                'code'      => '200',
+                'message'   => '查询消息成功',
+                'data'      => $admin
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '查询消息失败'
+            ]);
+        }
 
     }
 
+    /* 管理员删除 */
     public function delete() {
 
         /* 接收参数 */
