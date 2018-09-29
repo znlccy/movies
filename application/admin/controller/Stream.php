@@ -281,16 +281,124 @@ class Stream extends BasisController {
 
     /* 直播实时信息 */
     public function live() {
-        
+
+        /* 接收参数 */
+        $id = request()->param('id');
+        $limit = request()->param('limit',1000);
+
+        /* 验证参数 */
+        $validate_data = [
+            'id'        => $id,
+            'limit'     => $limit
+        ];
+
+        /* 验证结果 */
+        $result = $this->stream_validate->scene('live')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->stream_validate->getError()
+            ]);
+        }
+
+        /* 验证直播流 */
+        $streamKey = 'dao'.$id;
+
+        $liveStatus = $this->hub->listLiveStreams($streamKey, $limit, '');
+        if ($liveStatus) {
+            return json([
+                'code'      => '200',
+                'message'   => '直播流成功',
+                'data'      => $liveStatus
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '直播流失败'
+            ]);
+        }
     }
 
     /* 批量查询直播实时信息 */
     public function batch_live() {
 
+        /* 接收参数 */
+        $streamKey = request()->param('streamKey/a');
+
+        /* 验证参数 */
+        $validate_data = [
+            'streamKey'        => $streamKey
+        ];
+
+        /* 验证结果 */
+        $result = $this->stream_validate->scene('batch_live')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->stream_validate->getError()
+            ]);
+        }
+
+        /* 返回结果 */
+        $stream = $this->hub->batchLiveStatus($streamKey);
+
+        if ($stream) {
+            return json([
+                'code'      => '200',
+                'message'   => '查询流信息成功',
+                'data'      => $stream
+            ]);
+        } else {
+            return json([
+                'code'      => '404',
+                'message'   => '查询流信息失败'
+            ]);
+        }
     }
 
     /* 直播历史记录 */
     public function history() {
 
+        /* 接收参数 */
+        $id = request()->param('id');
+        $start = strtotime(request()->param('start', 0));
+        $end  = strtotime(request()->param('end', 0));
+
+        /* 验证参数 */
+        $validate_data = [
+            'id'        => $id,
+            'start'     => $start,
+            'end'       => $end
+        ];
+
+        /* 验证结果 */
+        $result = $this->stream_validate->scene('history')->check($validate_data);
+
+        if (true !== $result) {
+            return json([
+                'code'      => '401',
+                'message'   => $this->stream_validate->getError()
+            ]);
+        }
+
+        /* 返回结果 */
+        $streamKey = "anchor".$id;
+        try {
+            $records = $this->hub->stream($streamKey)->historyActivity($start, $end);
+            if ($records) {
+                return json([
+                    'code'      => '200',
+                    'message'   => '查询流历史成功',
+                    'data'      => $records
+                ]);
+            }
+        } catch (\Exception $e) {
+            return json([
+                'code'      => '404',
+                'message'   => '查询流历史失败'
+            ]);
+        }
     }
 }
