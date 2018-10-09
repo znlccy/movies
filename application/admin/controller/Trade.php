@@ -34,7 +34,7 @@ class Trade extends BasisController {
     /* 一般支付 */
     public function pay() {
         Pingpp::setApiKey($this->pay['apiKey']);
-        Pingpp::setPrivateKeyPath(__DIR__ . '../../private.pem');
+        Pingpp::setPrivateKeyPath(APP_PATH.'private.pem');
         $charge = \Pingpp\Charge::create(array('order_no'  => '123456789',
                 'amount'    => '1',//订单总金额, 人民币单位：分（如订单总金额为 1 元，此处请填 100）
                 'app'       => array('id' => $this->pay['appId']),
@@ -84,7 +84,21 @@ class Trade extends BasisController {
 
     /* 申请退款 */
     public function refund() {
+        Pingpp::setApiKey($this->pay['apiKey']);
+        Pingpp::setPrivateKeyPath(APP_PATH.'private.pem');
+        $ch = \Pingpp\Charge::retrieve('123456789');//ch_id 是已付款的订单号
+        $result = $ch->refunds->create(
+            array(
+                'amount' => 10,
+                'description' => 'Refund Description'
+            )
+        );
 
+        return json([
+            'code'      => '200',
+            'message'   => '退款成功',
+            'data'      => $result
+        ]);
     }
 
     /* 生成二维码 */
